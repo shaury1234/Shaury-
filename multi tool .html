@@ -1,0 +1,311 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multi-Tool Website with Dark Mode & Language</title>
+
+<!-- QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- pdf.js for PDF reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+
+<style>
+  :root {
+    --bg-color: #f4f4f4;
+    --text-color: #333;
+    --btn-bg: #007bff;
+    --btn-color: white;
+    --btn-bg-hover: #0056b3;
+  }
+  .dark-mode {
+    --bg-color: #1e1e1e;
+    --text-color: #eee;
+    --btn-bg: #4a90e2;
+    --btn-color: #eee;
+    --btn-bg-hover: #357abd;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .tool {
+    background: white;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex: 1 1 300px;
+    max-width: 400px;
+    box-sizing: border-box;
+    transition: background 0.3s, color 0.3s;
+  }
+  .dark-mode .tool {
+    background: #2c2c2c;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    margin: 8px 0 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: background 0.3s, color 0.3s;
+  }
+  .dark-mode input, .dark-mode select, .dark-mode textarea {
+    background: #444;
+    border: 1px solid #666;
+    color: white;
+  }
+
+  button {
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 10px 15px;
+    font-size: 1rem;
+    transition: 
+      transform 0.2s ease, 
+      box-shadow 0.2s ease,
+      background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    user-select: none;
+  }
+  button:hover, button:focus {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    background-color: var(--btn-bg-hover);
+    outline: none;
+  }
+
+  label {
+    font-weight: bold;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  @media (max-width: 900px) {
+    body {
+      flex-direction: column;
+      align-items: center;
+    }
+    .tool {
+      max-width: 100%;
+    }
+  }
+
+  header {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  header select, header button {
+    max-width: 150px;
+  }
+
+  #imagePreview img {
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <select id="languageSelector" aria-label="Language selector">
+    <option value="en" selected>English</option>
+    <option value="es">Español</option>
+  </select>
+  <button id="darkModeToggle" aria-pressed="false">Dark Mode</button>
+</header>
+
+<section class="tool" id="unitConverter">
+  <h2 data-en="📐 Unit Converter (cm ⇌ inch)" data-es="📐 Convertidor de Unidades (cm ⇌ pulgada)">📐 Unit Converter (cm ⇌ inch)</h2>
+  <input type="number" id="unitInput" placeholder="Enter value" />
+  <select id="unitType">
+    <option value="cm2in" data-en="cm to inch" data-es="cm a pulgada">cm to inch</option>
+    <option value="in2cm" data-en="inch to cm" data-es="pulgada a cm">inch to cm</option>
+  </select>
+  <button onclick="convertUnit()" data-en="Convert" data-es="Convertir">Convert</button>
+  <p id="unitResult"></p>
+</section>
+
+<section class="tool" id="tts">
+  <h2 data-en="🔊 Text to Speech" data-es="🔊 Texto a Voz">🔊 Text to Speech</h2>
+  <textarea id="ttsInput" placeholder="Enter text to speak"></textarea>
+  <button onclick="speakText()" data-en="Speak" data-es="Hablar">Speak</button>
+</section>
+
+<section class="tool" id="voiceToText">
+  <h2 data-en="🎙️ Voice to Text" data-es="🎙️ Voz a Texto">🎙️ Voice to Text</h2>
+  <button onclick="startSpeech()" data-en="Start Voice Input" data-es="Iniciar Voz">Start Voice Input</button>
+  <p id="speechResult"></p>
+</section>
+
+<section class="tool" id="textCleaner">
+  <h2 data-en="🧹 Text Cleaner" data-es="🧹 Limpiador de Texto">🧹 Text Cleaner</h2>
+  <textarea id="dirtyText" placeholder="Enter messy text"></textarea>
+  <button onclick="cleanText()" data-en="Clean" data-es="Limpiar">Clean</button>
+  <textarea id="cleanedText" placeholder="Cleaned text" readonly></textarea>
+</section>
+
+<section class="tool" id="qrCodeGenerator">
+  <h2 data-en="📱 QR Code Generator" data-es="📱 Generador de Código QR">📱 QR Code Generator</h2>
+  <input type="text" id="qrText" placeholder="Enter text or URL" />
+  <button onclick="generateQRCode()" data-en="Generate QR Code" data-es="Generar QR">Generate QR Code</button>
+  <div id="qrcode"></div>
+</section>
+
+<section class="tool" id="timezoneConverter">
+  <h2 data-en="🕒 Time Zone Converter" data-es="🕒 Convertidor de Zona Horaria">🕒 Time Zone Converter</h2>
+  <label for="timeInput" data-en="Select time:" data-es="Seleccionar hora:">Select time:</label>
+  <input type="datetime-local" id="timeInput" />
+  <label for="fromZone" data-en="From Timezone:" data-es="Desde Zona Horaria:">From Timezone:</label>
+  <select id="fromZone"></select>
+  <label for="toZone" data-en="To Timezone:" data-es="A Zona Horaria:">To Timezone:</label>
+  <select id="toZone"></select>
+  <button onclick="convertTimeZone()" data-en="Convert" data-es="Convertir">Convert</button>
+  <p id="timeZoneResult"></p>
+</section>
+
+<section class="tool" id="textEncryptDecrypt">
+  <h2 data-en="🔐 Text Encryption / Decryption" data-es="🔐 Encriptar / Desencriptar Texto">🔐 Text Encryption / Decryption</h2>
+  <textarea id="textToEncrypt" placeholder="Enter text"></textarea>
+  <input type="text" id="encryptKey" placeholder="Enter key (any text)" />
+  <button onclick="encryptText()" data-en="Encrypt" data-es="Encriptar">Encrypt</button>
+  <button onclick="decryptText()" data-en="Decrypt" data-es="Desencriptar">Decrypt</button>
+  <textarea id="resultText" placeholder="Result" readonly></textarea>
+</section>
+
+<section class="tool" id="calculator">
+  <h2 data-en="🧮 Calculator" data-es="🧮 Calculadora">🧮 Calculator</h2>
+  <input type="text" id="calcInput" placeholder="Enter expression (e.g. 2+3*5)" />
+  <button onclick="calculateResult()" data-en="Calculate" data-es="Calcular">Calculate</button>
+  <p id="calcResult"></p>
+</section>
+
+<section class="tool" id="pdfTools">
+  <h2 data-en="📄 PDF Tools" data-es="📄 Herramientas PDF">📄 PDF Tools</h2>
+  
+  <label for="pdfFileInput" data-en="Upload PDF to extract text:" data-es="Subir PDF para extraer texto:">Upload PDF to extract text:</label>
+  <input type="file" id="pdfFileInput" accept="application/pdf" />
+  <button onclick="extractTextFromPDF()" data-en="Extract Text" data-es="Extraer Texto">Extract Text</button>
+  <textarea id="pdfExtractedText" placeholder="Extracted text will appear here..." readonly></textarea>
+
+  <hr/>
+
+  <label for="textToPdfInput" data-en="Enter text to create PDF:" data-es="Introducir texto para crear PDF:">Enter text to create PDF:</label>
+  <textarea id="textToPdfInput" placeholder="Enter text here..."></textarea>
+  <button onclick="generatePDF()" data-en="Generate PDF" data-es="Generar PDF">Generate PDF</button>
+</section>
+
+<section class="tool" id="fileConverter">
+  <h2 data-en="🔄 File Converter (Image Base64)" data-es="🔄 Convertidor de Archivo (Imagen Base64)">🔄 File Converter (Image Base64)</h2>
+  
+  <label for="imageFileInput" data-en="Select image to convert to Base64:" data-es="Seleccionar imagen para convertir a Base64:">Select image to convert to Base64:</label>
+  <input type="file" id="imageFileInput" accept="image/*" />
+  <button onclick="imageToBase64()" data-en="Convert to Base64" data-es="Convertir a Base64">Convert to Base64</button>
+  <textarea id="base64Output" placeholder="Base64 string will appear here..." readonly></textarea>
+
+  <hr/>
+
+  <label for="base64Input" data-en="Paste Base64 string to convert to image:" data-es="Pegar cadena Base64 para convertir a imagen:">Paste Base64 string to convert to image:</label>
+  <textarea id="base64Input" placeholder="Paste Base64 string here..."></textarea>
+  <button onclick="base64ToImage()" data-en="Convert to Image" data-es="Convertir a Imagen">Convert to Image</button>
+  <div id="imagePreview"></div>
+</section>
+
+<script>
+  // Language switching
+  const languageSelector = document.getElementById('languageSelector');
+  languageSelector.addEventListener('change', () => {
+    const lang = languageSelector.value;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-en]').forEach(el => {
+      el.textContent = el.getAttribute(`data-${lang}`);
+    });
+    updatePlaceholders(lang);
+  });
+  function updatePlaceholders(lang) {
+    const placeholders = {
+      'unitInput': {'en': 'Enter value', 'es': 'Ingrese valor'},
+      'ttsInput': {'en': 'Enter text to speak', 'es': 'Ingrese texto para hablar'},
+      'dirtyText': {'en': 'Enter messy text', 'es': 'Ingrese texto desordenado'},
+      'cleanedText': {'en': 'Cleaned text', 'es': 'Texto limpio'},
+      'qrText': {'en': 'Enter text or URL', 'es': 'Ingrese texto o URL'},
+      'textToEncrypt': {'en': 'Enter text', 'es': 'Ingrese texto'},
+      'encryptKey': {'en': 'Enter key (any text)', 'es': 'Ingrese clave (cualquier texto)'},
+      'resultText': {'en': 'Result', 'es': 'Resultado'},
+      'calcInput': {'en': 'Enter expression (e.g. 2+3*5)', 'es': 'Ingrese expresión (ej. 2+3*5)'},
+      'pdfExtractedText': {'en': 'Extracted text will appear here...', 'es': 'El texto extraído aparecerá aquí...'},
+      'textToPdfInput': {'en': 'Enter text here...', 'es': 'Ingrese texto aquí...'},
+      'base64Output': {'en': 'Base64 string will appear here...', 'es': 'La cadena Base64 aparecerá aquí...'},
+      'base64Input': {'en': 'Paste Base64 string here...', 'es': 'Pegue la cadena Base64 aquí...'}
+    };
+    for (const id in placeholders) {
+      const el = document.getElementById(id);
+      if(el) el.placeholder = placeholders[id][lang];
+    }
+  }
+  updatePlaceholders('en');
+
+  // Dark Mode Toggle
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    darkModeToggle.setAttribute('aria-pressed', isDark);
+    darkModeToggle.textContent = isDark ? (languageSelector.value === 'es' ? 'Modo Claro' : 'Light Mode') : (languageSelector.value === 'es' ? 'Modo Oscuro' : 'Dark Mode');
+  });
+
+  // Unit Converter
+  function convertUnit() {
+    const val = parseFloat(document.getElementById('unitInput').value);
+    const type = document.getElementById('unitType').value;
+    if(isNaN(val)) {
+      alert(languageSelector.value === 'es' ? 'Por favor, ingrese un número válido.' : 'Please enter a valid number.');
+      return;
+    }
+    let res = '';
+    if(type === 'cm2in') {
+      res = (val / 2.54).toFixed(4) + ' inch';
+    } else {
+      res = (val * 2.54).toFixed(4) + ' cm';
+    }
+    document.getElementById('unitResult').textContent = res;
+  }
+
+  // Text to Speech
+  function speakText() {
+    const text = document.getElementById('ttsInput').value;
+    if(!text.trim()) return alert(languageSelector.value === 'es' ? 'Ingrese texto para hablar.' : 'Please enter text to
